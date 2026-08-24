@@ -25,6 +25,7 @@ import {
   X
 } from 'lucide-react';
 import { OrcrimData, MembroEstruturaOrcrim, Infrator, SituacaoPrisional } from '../types';
+import { db } from '../backend/db';
 
 interface OrcrimWindowProps {
   onSelectSuspect?: (infratorId: string) => void;
@@ -56,8 +57,8 @@ export const OrcrimWindow: React.FC<OrcrimWindowProps> = ({ onSelectSuspect, reg
   const fetchOrganogramas = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/orcrim/organogramas');
-      if (res.ok) {
+      const res = await fetch('/api/orcrim/organogramas').catch(() => null);
+      if (res && res.ok) {
         const data = await res.json();
         setOrganogramas(data);
         if (data.length > 0) {
@@ -69,11 +70,25 @@ export const OrcrimWindow: React.FC<OrcrimWindowProps> = ({ onSelectSuspect, reg
             if (found) setCurrentOrcrim(found);
           }
         }
+        return;
       }
     } catch (err) {
-      console.error('Erro ao carregar organogramas ORCRIM:', err);
+      console.warn('Backend indisponível, utilizando dados locais de ORCRIM:', err);
     } finally {
       setLoading(false);
+    }
+
+    // Static fallback for GitHub Pages / client-only mode
+    const fallbackData = db.orcrim_organogramas;
+    setOrganogramas(fallbackData);
+    if (fallbackData.length > 0) {
+      if (!selectedOrcrimId || !fallbackData.find((d: OrcrimData) => d.id === selectedOrcrimId)) {
+        setSelectedOrcrimId(fallbackData[0].id || 'pcc-torre-velhas');
+        setCurrentOrcrim(fallbackData[0]);
+      } else {
+        const found = fallbackData.find((d: OrcrimData) => d.id === selectedOrcrimId);
+        if (found) setCurrentOrcrim(found);
+      }
     }
   };
 

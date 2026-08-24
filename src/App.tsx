@@ -46,6 +46,7 @@ import {
   CruzamentoSuspeito,
   AlertaReincidenciaPerimetro
 } from './types';
+import { db } from './backend/db';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'map' | 'network' | 'ai' | 'db' | 'orcrim'>('map');
@@ -223,12 +224,12 @@ export default function App() {
   const fetchTelemetry = async () => {
     try {
       const [resS, resO, resA] = await Promise.all([
-        fetch('/api/infratores'),
-        fetch('/api/ocorrencias'),
-        fetch('/api/enderecos'),
+        fetch('/api/infratores').catch(() => null),
+        fetch('/api/ocorrencias').catch(() => null),
+        fetch('/api/enderecos').catch(() => null),
       ]);
 
-      if (resS.ok && resO.ok && resA.ok) {
+      if (resS && resO && resA && resS.ok && resO.ok && resA.ok) {
         const listS = await resS.json();
         const listO = await resO.json();
         const listA = await resA.json();
@@ -241,10 +242,24 @@ export default function App() {
         setTotalSuspects(listS.length);
         setActiveWarrants(listS.filter((s: any) => s.status_mandado_prisao).length);
         setTotalIncidents(listO.length);
+        return;
       }
     } catch (err) {
-      console.error('Error fetching telemetry:', err);
+      console.warn('API backend indisponível, inicializando dados locais de inteligência:', err);
     }
+
+    // Static fallback for GitHub Pages / client-side execution
+    const listS = db.infratores;
+    const listO = db.ocorrencias_criminais;
+    const listA = db.enderecos_atuacao;
+
+    setSuspects([...listS]);
+    setOccurrences([...listO]);
+    setAddresses([...listA]);
+
+    setTotalSuspects(listS.length);
+    setActiveWarrants(listS.filter((s: any) => s.status_mandado_prisao).length);
+    setTotalIncidents(listO.length);
   };
 
   useEffect(() => {
@@ -373,14 +388,20 @@ export default function App() {
   // Open detailed suspect drawer
   const handleViewSuspectDetail = async (id: string) => {
     try {
-      const res = await fetch(`/api/infratores/${id}`);
-      if (res.ok) {
+      const res = await fetch(`/api/infratores/${id}`).catch(() => null);
+      if (res && res.ok) {
         const data = await res.json();
         setSelectedSuspectDetail(data);
         setActiveTab('db');
+        return;
       }
     } catch (err) {
-      console.error('Error viewing suspect:', err);
+      console.warn('Error viewing suspect from API, falling back to local DB:', err);
+    }
+    const localData = db.getInfratorFull(id);
+    if (localData) {
+      setSelectedSuspectDetail(localData);
+      setActiveTab('db');
     }
   };
 
@@ -540,20 +561,17 @@ export default function App() {
         setSelectedSuspectDetail(null);
       }
 
+      // Delete from client-side DB instance
+      db.deleteInfrator(id);
+
       const res = await fetch(`/api/infratores/${id}`, {
         method: 'DELETE',
-      });
+      }).catch(() => null);
 
-      if (res.ok) {
-        const displayName = vulgo ? `${nome} ("${vulgo}")` : nome;
-        setToastMessage(`Infrator ${displayName} excluído com sucesso.`);
-        setTimeout(() => setToastMessage(null), 4000);
-        fetchTelemetry();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setToastMessage(`Erro ao excluir: ${data.error || 'Falha no servidor'}`);
-        fetchTelemetry();
-      }
+      const displayName = vulgo ? `${nome} ("${vulgo}")` : nome;
+      setToastMessage(`Infrator ${displayName} excluído com sucesso.`);
+      setTimeout(() => setToastMessage(null), 4000);
+      fetchTelemetry();
     } catch (err) {
       console.error('Error deleting suspect:', err);
       setToastMessage('Falha na comunicação com o servidor para exclusão.');
