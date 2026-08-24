@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NetworkNode, NetworkEdge } from '../types';
 import { Users, AlertTriangle, FileText, Share2, FileDown } from 'lucide-react';
+import { db } from '../backend/db';
 
 interface NetworkGraphProps {
   onSelectNode?: (nodeId: string, nodeType: 'suspect' | 'incident') => void;
@@ -33,13 +34,21 @@ export default function NetworkGraph({ onSelectNode }: NetworkGraphProps) {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/network-graph');
-      if (!res.ok) throw new Error('Falha ao buscar dados do grafo de vínculos.');
-      const data = await res.json();
+      let graphData: any = null;
+      const res = await fetch('/api/network-graph').catch(() => null);
+      if (res && res.ok) {
+        graphData = await res.json();
+      } else {
+        graphData = db.getNetworkGraph();
+      }
+
+      if (!graphData || !graphData.nodes) {
+        graphData = db.getNetworkGraph();
+      }
 
       // Initialize positions in a circle/radial layout to let the force layout settle nicely
-      const physicsNodes = data.nodes.map((node: NetworkNode, idx: number) => {
-        const angle = (idx / data.nodes.length) * Math.PI * 2;
+      const physicsNodes = (graphData.nodes || []).map((node: NetworkNode, idx: number) => {
+        const angle = (idx / (graphData.nodes.length || 1)) * Math.PI * 2;
         const radius = 150 + Math.random() * 50;
         return {
           ...node,
@@ -51,9 +60,23 @@ export default function NetworkGraph({ onSelectNode }: NetworkGraphProps) {
       });
 
       setNodes(physicsNodes);
-      setEdges(data.edges);
+      setEdges(graphData.edges || []);
     } catch (err: any) {
-      setError(err.message);
+      console.warn('Erro ao processar dados do grafo:', err);
+      const fallbackData = db.getNetworkGraph();
+      const physicsNodes = fallbackData.nodes.map((node: NetworkNode, idx: number) => {
+        const angle = (idx / fallbackData.nodes.length) * Math.PI * 2;
+        const radius = 150 + Math.random() * 50;
+        return {
+          ...node,
+          x: width / 2 + Math.cos(angle) * radius,
+          y: height / 2 + Math.sin(angle) * radius,
+          vx: 0,
+          vy: 0,
+        };
+      });
+      setNodes(physicsNodes);
+      setEdges(fallbackData.edges);
     } finally {
       setLoading(false);
     }

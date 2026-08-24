@@ -681,6 +681,62 @@ class CrimIntelDatabase {
     ];
   }
 
+  // Get network graph
+  public getNetworkGraph(): { nodes: any[]; edges: any[] } {
+    const nodes: any[] = [];
+    const edges: any[] = [];
+
+    // Add Suspect Nodes
+    this.infratores.forEach(i => {
+      nodes.push({
+        id: i.id,
+        label: `${i.nome_completo} (${i.vulgo})`,
+        type: 'suspect',
+        gang: i.gangue_faccao,
+        periculosidade: i.periculosidade,
+        mandado: i.status_mandado_prisao,
+        foto_url: i.foto_url
+      });
+    });
+
+    // Add Crime Incident Nodes
+    this.ocorrencias_criminais.forEach(o => {
+      nodes.push({
+        id: o.id,
+        label: `${o.numero_bo} - ${o.tipificacao_penal}`,
+        type: 'incident',
+        tipificacao: o.tipificacao_penal,
+        data: o.data_hora
+      });
+    });
+
+    // Add Edges from infrator_ocorrencia
+    this.infrator_ocorrencia.forEach(io => {
+      edges.push({
+        source: io.infrator_id,
+        target: io.ocorrencia_id,
+        type: 'participated',
+        label: io.papel_no_crime,
+        color: '#dc2626'
+      });
+    });
+
+    // Add Edges from vinculos_comparsas
+    this.vinculos_comparsas.forEach(v => {
+      edges.push({
+        source: v.infrator_origem_id,
+        target: v.infrator_destino_id,
+        type: 'comparsa',
+        label: `Grau: ${v.grau_relacao}`,
+        description: v.historico_conjunto,
+        color: '#2563eb',
+        width: v.grau_relacao === 'Forte' ? 3 : v.grau_relacao === 'Média' ? 2 : 1
+      });
+    });
+
+    return { nodes, edges };
+  }
+
   // Get matching suspects based on radius buffer and modus operandi/physical characteristics
   public matchSuspectsInRadius(lat: number, lng: number, radiusKm: number): any[] {
     const matchedEnderecos = this.enderecos_atuacao.filter(ea => {

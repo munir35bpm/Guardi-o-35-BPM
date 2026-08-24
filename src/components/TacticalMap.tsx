@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import { OcorrenciaCriminal, EnderecoAtuacao } from '../types';
 import { MapPin, Crosshair, Navigation, AlertCircle } from 'lucide-react';
+import { db } from '../backend/db';
 
 interface TacticalMapProps {
   selectedCoords?: { lat: number; lng: number } | null;
@@ -28,20 +29,24 @@ export default function TacticalMap({
   const fetchMapData = async () => {
     try {
       const [resOc, resAdd] = await Promise.all([
-        fetch('/api/ocorrencias'),
-        fetch('/api/enderecos'),
+        fetch('/api/ocorrencias').catch(() => null),
+        fetch('/api/enderecos').catch(() => null),
       ]);
-      if (resOc.ok && resAdd.ok) {
+      if (resOc && resAdd && resOc.ok && resAdd.ok) {
         const dataOc = await resOc.json();
         const dataAdd = await resAdd.json();
         setOccurrences(dataOc);
         setAddresses(dataAdd);
+        setLoading(false);
+        return;
       }
     } catch (e) {
-      console.error('Error fetching map data:', e);
-    } finally {
-      setLoading(false);
+      console.warn('Backend indisponível para mapa, usando dados locais:', e);
     }
+    // Fallback local
+    setOccurrences(db.ocorrencias_criminais);
+    setAddresses(db.enderecos_atuacao);
+    setLoading(false);
   };
 
   useEffect(() => {
