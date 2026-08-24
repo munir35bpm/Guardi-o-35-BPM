@@ -331,66 +331,11 @@ class CrimIntelDatabase {
       }
     ];
 
-    // 4. Ocorrencias Criminais
-    const o1: OcorrenciaCriminal = {
-      id: 'oc-001',
-      numero_bo: 'BO-1234/2026',
-      data_hora: '2026-03-12T22:30:00Z',
-      tipificacao_penal: 'Roubo de Carga',
-      descricao_fato: 'Dois indivíduos armados com pistolas semi-automáticas interceptaram um caminhão de entregas de eletrodomésticos na alça de acesso da Rodovia Anchieta. O motorista foi mantido sob ameaça armada enquanto a carga era transbordada para uma van Sprinter branca. O líder da ação era careca e ostentava uma tatuagem marcante de palhaço no braço.',
-      modus_operandi: 'Abordagem tática na rodovia, bloqueio com veículo de apoio, sequestro temporário do motorista, transbordo rápido de carga em local previamente estabelecido.',
-      armas_utilizadas: 'Pistolas semi-automáticas 9mm e calibre .380',
-      veiculo_utilizado: 'Van Sprinter branca com placas clonadas e Fiat Uno prata de apoio',
-      geom_crime: { lat: -23.6141, lng: -46.5892 }
-    };
+    // 4. Ocorrencias Criminais (Inicia vazio para novos cadastros do usuário)
+    this.ocorrencias_criminais = [];
 
-    const o2: OcorrenciaCriminal = {
-      id: 'oc-002',
-      numero_bo: 'BO-5678/2026',
-      data_hora: '2026-04-05T14:15:00Z',
-      tipificacao_penal: 'Roubo a Transeunte',
-      descricao_fato: 'Vítima caminhando pela calçada próxima à estação de metrô quando foi abordada por indivíduo jovem e magro numa motocicleta preta, vestindo moletom escuro. O elemento anunciou o assalto fazendo menção de portar arma sob a blusa, exigindo celular e carteira, evadindo-se em seguida em direção à comunidade.',
-      modus_operandi: 'Abordagem rápida de transeunte com motocicleta, intimidação simulando arma de fogo, fuga rápida por vielas.',
-      armas_utilizadas: 'Simulação de arma de fogo',
-      veiculo_utilizado: 'Motocicleta Honda Titan preta sem placa',
-      geom_crime: { lat: -23.6119, lng: -46.7262 }
-    };
-
-    const o3: OcorrenciaCriminal = {
-      id: 'oc-003',
-      numero_bo: 'BO-7890/2026',
-      data_hora: '2026-05-20T03:00:00Z',
-      tipificacao_penal: 'Tráfico de Entorpecentes',
-      descricao_fato: 'Equipe da Polícia Militar em patrulhamento preventivo pelo bairro do Brás visualizou indivíduo em atitude suspeita comercializando substâncias análogas ao crack e maconha. Após abordagem, foram localizados com o mesmo diversos pinos de cocaína, pedras de crack e quantia em dinheiro trocado.',
-      modus_operandi: 'Venda direta (varejo) de drogas em via pública, escondendo as substâncias em bueiros e entulhos próximos.',
-      armas_utilizadas: 'Nenhuma',
-      veiculo_utilizado: 'Nenhum',
-      geom_crime: { lat: -23.5375, lng: -46.6189 }
-    };
-
-    const o4: OcorrenciaCriminal = {
-      id: 'oc-004',
-      numero_bo: 'BO-9012/2026',
-      data_hora: '2026-06-01T21:45:00Z',
-      tipificacao_penal: 'Roubo de Carga',
-      descricao_fato: 'Roubo consumado de carga de eletrônicos no km 12 da Via Anchieta. Três criminosos armados com pistolas renderam a equipe de escolta e o motorista do veículo transportador. Os meliantes agiram com extrema agressividade verbal e física, liderados por um indivíduo alto de compleição forte, apelidado de Neguinho, auxiliado por um executor careca de jaqueta de couro.',
-      modus_operandi: 'Rendimento violento de escolta armada, uso de bloqueadores de sinal (jammer) para neutralizar o rastreador, desvio de itinerário para comunidade Heliópolis.',
-      armas_utilizadas: 'Pistolas semi-automáticas, revólver calibre .38',
-      veiculo_utilizado: 'Van de carga Sprinter branca e Fiat Palio cinza de cobertura',
-      geom_crime: { lat: -23.6180, lng: -46.5930 }
-    };
-
-    this.ocorrencias_criminais = [o1, o2, o3, o4];
-
-    // 5. Infrator_Ocorrencia Relations
-    this.infrator_ocorrencia = [
-      { infrator_id: i1.id, ocorrencia_id: o1.id, papel_no_crime: 'Executor' },
-      { infrator_id: i4.id, ocorrencia_id: o1.id, papel_no_crime: 'Co-autor' },
-      { infrator_id: i2.id, ocorrencia_id: o2.id, papel_no_crime: 'Executor' },
-      { infrator_id: i3.id, ocorrencia_id: o3.id, papel_no_crime: 'Executor' },
-      { infrator_id: i4.id, ocorrencia_id: o4.id, papel_no_crime: 'Executor' },
-      { infrator_id: i1.id, ocorrencia_id: o4.id, papel_no_crime: 'Co-autor' }
-    ];
+    // 5. Infrator_Ocorrencia Relations (Inicia vazio)
+    this.infrator_ocorrencia = [];
 
     // 6. Vinculos Comparsas
     this.vinculos_comparsas = [
